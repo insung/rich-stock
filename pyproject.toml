@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling", "hatch-requirements-txt"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rich-stock"
+dynamic = ["version"]
+description = ''
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+keywords = []
+authors = [
+  { name = "insung", email = "imissyoubrad@gmail.com" },
+]
+classifiers = [
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = []
+
+[project.urls]
+Documentation = "https://github.com/insung/rich-stock#readme"
+Issues = "https://github.com/insung/rich-stock/issues"
+Source = "https://github.com/insung/rich-stock"
+
+[tool.hatch.version]
+path = "src/rich_stock/__about__.py"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/rich_stock tests}"
+
+[tool.coverage.run]
+source_pkgs = ["rich_stock", "tests"]
+branch = true
+parallel = true
+omit = [
+  "src/rich_stock/__about__.py",
+]
+
+[tool.coverage.paths]
+rich_stock = ["src/rich_stock", "*/rich-stock/src/rich_stock"]
+tests = ["tests", "*/rich-stock/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]
