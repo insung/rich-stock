@@ -6,11 +6,13 @@ from ..models.token_credential_model import TokenCredential
 from ..controllers.auth_controller import verify_token
 
 
-history_router = APIRouter(prefix="/history", dependencies=[Depends(verify_token)])
+history_router = APIRouter(
+    prefix="/history", dependencies=[Depends(verify_token)], tags=["History"]
+)
 
 
 @history_router.get("/daily")
-async def daily_history(
+async def get_daily(
     begin_date: str = Query(description="조회 시작 날짜", examples=["20240901"]),
     end_date: str = Query(description="조회 종료 날짜", examples=["20241001"]),
     token_credential: TokenCredential = Depends(verify_token),

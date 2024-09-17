@@ -13,7 +13,7 @@ from ..models.token_model import (
 )
 
 
-auth_router = APIRouter(prefix="/auth")
+auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 api_key = os.environ.get("api_key")
 
 

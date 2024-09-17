@@ -10,13 +10,13 @@ from ..entities.kis_balance_entity import (
     KISOverseasBalanceRequest,
     KISOverseasBalanceResponse,
 )
-from ..models.my_balance_model import MyDomesticBalanceResponse
+from ..models.my_balance_model import MyBalanceResponse
 from ..models.token_credential_model import TokenCredential
 
 
 class MyBalanceRepositoryABC(ABC):
     @abstractmethod
-    async def get_my_balance(self) -> MyDomesticBalanceResponse:
+    async def get_my_balance(self) -> MyBalanceResponse:
         raise NotImplementedError
 
 
@@ -41,7 +41,7 @@ class KISDomesticBalanceRepository(MyBalanceRepositoryABC):
             tr_id=tr_id,
         ).model_dump()
 
-    async def get_my_balance(self) -> MyDomesticBalanceResponse:
+    async def get_my_balance(self) -> MyBalanceResponse:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 self.url,
@@ -57,7 +57,7 @@ class KISDomesticBalanceRepository(MyBalanceRepositoryABC):
                     status_code=status.HTTP_403_FORBIDDEN, detail="국내 잔고조회 실패"
                 )
 
-            return MyDomesticBalanceResponse(
+            return MyBalanceResponse(
                 deposit=kis_response.output2[0].dnca_tot_amt,
                 deposit_next_day=kis_response.output2[0].nxdy_excc_amt,
                 deposit_day_after_next=kis_response.output2[0].prvs_rcdl_excc_amt,
@@ -85,7 +85,7 @@ class KISOverseasBalanceRepository(MyBalanceRepositoryABC):
             tr_id=tr_id,
         ).model_dump()
 
-    async def get_my_balance(self) -> MyDomesticBalanceResponse:
+    async def get_my_balance(self) -> MyBalanceResponse:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 self.url,
