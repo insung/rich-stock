@@ -17,7 +17,7 @@ auth_router = APIRouter(prefix="/auth")
 api_key = os.environ.get("api_key")
 
 
-@auth_router.post("/issue_token", description="접근토큰발급")
+@auth_router.post("/issue_token", description="토큰발급")
 async def issue_token(body: TokenIssueRequest) -> TokenIssueResponse:
     url = body.get_domain_url() + "/oauth2/tokenP"
     kis_request = KISTokenRequest(appkey=body.appkey, appsecret=body.appsecret)

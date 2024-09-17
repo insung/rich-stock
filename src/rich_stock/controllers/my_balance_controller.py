@@ -20,7 +20,5 @@ my_balance_router = APIRouter(
 async def my_balance(
     token_credential: TokenCredential = Depends(verify_token),
 ) -> MyDomesticBalanceResponse:
-    repository = KISDomesticBalanceRepository(
-        token_credential, token_credential.is_real_domain
-    )
+    repository = KISDomesticBalanceRepository(token_credential)
     return await repository.get_my_balance()

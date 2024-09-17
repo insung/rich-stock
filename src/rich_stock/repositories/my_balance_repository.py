@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 import aiohttp
 from fastapi import HTTPException, status
 
+from ..entities.kis_base_entity import KISRequestHeaderBase
 from ..entities.kis_balance_entity import (
     KISDomesticBalanceRequest,
-    KISBalanceRequestHeader,
     KISDomesticBalanceResponse,
     KISOverseasBalanceRequest,
     KISOverseasBalanceResponse,
@@ -21,8 +21,8 @@ class MyBalanceRepositoryABC(ABC):
 
 
 class KISDomesticBalanceRepository(MyBalanceRepositoryABC):
-    def __init__(self, token_credential: TokenCredential, is_real_domain: bool):
-        tr_id = "TTTC8434R" if is_real_domain else "VTTC8434R"
+    def __init__(self, token_credential: TokenCredential):
+        tr_id = "TTTC8434R" if token_credential.is_real_domain else "VTTC8434R"
 
         self.url = (
             token_credential.get_domain_url()
@@ -34,7 +34,7 @@ class KISDomesticBalanceRepository(MyBalanceRepositoryABC):
             account_code=token_credential.get_account_number_suffix(),
         ).model_dump(by_alias=True)
 
-        self.kis_request_header = KISBalanceRequestHeader(
+        self.kis_request_header = KISRequestHeaderBase(
             authorization=f"{token_credential.token_type} {token_credential.access_token}",
             appkey=token_credential.appkey,
             appsecret=token_credential.appsecret,
@@ -65,8 +65,8 @@ class KISDomesticBalanceRepository(MyBalanceRepositoryABC):
 
 
 class KISOverseasBalanceRepository(MyBalanceRepositoryABC):
-    def __init__(self, token_credential: TokenCredential, is_real_domain: bool):
-        tr_id = "TTTS3012R" if is_real_domain else "VTTS3012R"
+    def __init__(self, token_credential: TokenCredential):
+        tr_id = "TTTS3012R" if token_credential.is_real_domain else "VTTS3012R"
 
         self.url = (
             token_credential.get_domain_url()
@@ -78,7 +78,7 @@ class KISOverseasBalanceRepository(MyBalanceRepositoryABC):
             account_code=token_credential.get_account_number_suffix(),
         ).model_dump(by_alias=True)
 
-        self.kis_request_header = KISBalanceRequestHeader(
+        self.kis_request_header = KISRequestHeaderBase(
             authorization=f"{token_credential.token_type} {token_credential.access_token}",
             appkey=token_credential.appkey,
             appsecret=token_credential.appsecret,

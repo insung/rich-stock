@@ -2,34 +2,11 @@ from enum import Enum
 from fastapi import Header
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
-from ..models.enums import CurrencyCode
-from ..entities.kis_base_entity import KISBaseResponse
+from ..models.enums import CurrencyCode, OverseasMarketCode
+from ..entities.kis_base_entity import KISRequestBase, KISResponseBase
 
 
-class KISBalanceRequestHeader(BaseModel):
-    authorization: str = Header(description="발급한 Access token")
-    appkey: str = Header(description="한국투자증권 홈페이지에서 발급받은 appkey")
-    appsecret: str = Header(description="한국투자증권 홈페이지에서 발급받은 appsecret")
-    tr_id: str = Header(description="거래ID")
-    custtype: str = Header(description="고객타입 (P: 개인 / B: 법인)", default="P")
-
-
-class KISBalanceRequestBase(BaseModel):
-    account_number: str = Field(
-        max_length=8,
-        min_length=8,
-        description="종합계좌번호. 계좌번호 체계(8-2)의 앞 8자리",
-        serialization_alias="CANO",
-    )
-    account_code: str = Field(
-        max_length=2,
-        min_length=2,
-        description="계좌상품코드. 계좌번호 체계(8-2)의 뒤 2자리",
-        serialization_alias="ACNT_PRDT_CD",
-    )
-
-
-class KISDomesticBalanceRequest(KISBalanceRequestBase):
+class KISDomesticBalanceRequest(KISRequestBase):
     is_outside_trading_single_price: bool = Field(
         default=False,
         description="시간외단일가여부",
@@ -163,7 +140,7 @@ class KISDomesticBalanceOutput2Response(BaseModel):
     asst_icdc_erng_rt: float = Field(description="자산증감수익율")
 
 
-class KISDomesticBalanceResponse(KISBaseResponse):
+class KISDomesticBalanceResponse(KISResponseBase):
     output1: list[KISDomesticBalanceOutput1Response | None] = Field(
         description="응답상세1"
     )
@@ -174,20 +151,7 @@ class KISDomesticBalanceResponse(KISBaseResponse):
     ctx_area_nk100: str = Field(description="연속조회키100")
 
 
-class OverseasMarketCode(str, Enum):
-    Nasdaq = "NASD"  # 나스닥
-    NYSE = "NYSE"  # 뉴욕
-    AMEX = "AMEX"  # 아멕스
-    # NAS = "NAS"  # 나스닥 (실전 투자용 나스닥 Only)
-    # SEHK = "SEHK"  # 홍콩
-    # SHAA = "중국상해"
-    # SZAA = "중국심천"
-    # TKSE = "일본"
-    # HASE = "베트남 하노이"
-    # VNSE = "베트남 호치민"
-
-
-class KISOverseasBalanceRequest(KISBalanceRequestBase):
+class KISOverseasBalanceRequest(KISRequestBase):
     market_code: OverseasMarketCode = Field(
         default=OverseasMarketCode.Nasdaq,
         description="해외거래소코드",
@@ -245,7 +209,7 @@ class KISOverseasOutput2Response(BaseModel):
     frcr_buy_amt_smtl2: float = Field(description="외화매수금액합계2")
 
 
-class KISOverseasBalanceResponse(KISBaseResponse):
+class KISOverseasBalanceResponse(KISResponseBase):
     output1: list[KISOverseasOutput1Response | None] = Field(description="응답상세1")
     output2: KISOverseasOutput2Response | None = Field(
         default=None, description="응답상세2"
