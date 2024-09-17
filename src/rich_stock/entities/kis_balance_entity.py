@@ -1,6 +1,8 @@
+from enum import Enum
 from fastapi import Header
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
+from ..models.enums import CurrencyCode
 from ..entities.kis_base_entity import KISBaseResponse
 
 
@@ -8,14 +10,11 @@ class KISBalanceRequestHeader(BaseModel):
     authorization: str = Header(description="발급한 Access token")
     appkey: str = Header(description="한국투자증권 홈페이지에서 발급받은 appkey")
     appsecret: str = Header(description="한국투자증권 홈페이지에서 발급받은 appsecret")
-    tr_id: str = Header(
-        default="TTTC8434R",
-        description="거래ID (실전투자: TTTC8434R, 모의투자: VTTC8434R)",
-    )
+    tr_id: str = Header(description="거래ID")
     custtype: str = Header(description="고객타입 (P: 개인 / B: 법인)", default="P")
 
 
-class KISBalanceRequest(BaseModel):
+class KISBalanceRequestBase(BaseModel):
     account_number: str = Field(
         max_length=8,
         min_length=8,
@@ -28,6 +27,9 @@ class KISBalanceRequest(BaseModel):
         description="계좌상품코드. 계좌번호 체계(8-2)의 뒤 2자리",
         serialization_alias="ACNT_PRDT_CD",
     )
+
+
+class KISDomesticBalanceRequest(KISBalanceRequestBase):
     is_outside_trading_single_price: bool = Field(
         default=False,
         description="시간외단일가여부",
@@ -95,7 +97,7 @@ class KISBalanceRequest(BaseModel):
         return f"0{value}"
 
 
-class KISBalanceOutput1Response(BaseModel):
+class KISDomesticBalanceOutput1Response(BaseModel):
     pdno: int = Field(description="상품번호 (종목번호(뒷 6자리))")
     prdt_name: str = Field(description="상품명")
     trad_dvsn_name: int = Field(description="매매구분명 (매수매도구분)")
@@ -128,7 +130,7 @@ class KISBalanceOutput1Response(BaseModel):
     stck_loan_unpr: int = Field(description="주식대출단가")
 
 
-class KISBalanceOutput2Response(BaseModel):
+class KISDomesticBalanceOutput2Response(BaseModel):
     dnca_tot_amt: int = Field(description="예수금총금액 (예수금)")
     nxdy_excc_amt: int = Field(description="익일정산금액 (예수금+1)")
     prvs_rcdl_excc_amt: int = Field(description="가수도정산금액 (예수금+2)")
@@ -161,13 +163,92 @@ class KISBalanceOutput2Response(BaseModel):
     asst_icdc_erng_rt: float = Field(description="자산증감수익율")
 
 
-class KISBalanceResponse(KISBaseResponse):
-    msg1: str = Field(description="응답메세지")
-    output1: list[KISBalanceOutput1Response] | None = Field(
-        description="응답상세1", default=None
+class KISDomesticBalanceResponse(KISBaseResponse):
+    output1: list[KISDomesticBalanceOutput1Response | None] = Field(
+        description="응답상세1"
     )
-    output2: list[KISBalanceOutput2Response] | None = Field(
-        description="응답상세2", default=None
+    output2: list[KISDomesticBalanceOutput2Response | None] = Field(
+        description="응답상세2"
     )
     ctx_area_fk100: str = Field(description="연속조회검색조건100")
     ctx_area_nk100: str = Field(description="연속조회키100")
+
+
+class OverseasMarketCode(str, Enum):
+    Nasdaq = "NASD"  # 나스닥
+    NYSE = "NYSE"  # 뉴욕
+    AMEX = "AMEX"  # 아멕스
+    # NAS = "NAS"  # 나스닥 (실전 투자용 나스닥 Only)
+    # SEHK = "SEHK"  # 홍콩
+    # SHAA = "중국상해"
+    # SZAA = "중국심천"
+    # TKSE = "일본"
+    # HASE = "베트남 하노이"
+    # VNSE = "베트남 호치민"
+
+
+class KISOverseasBalanceRequest(KISBalanceRequestBase):
+    market_code: OverseasMarketCode = Field(
+        default=OverseasMarketCode.Nasdaq,
+        description="해외거래소코드",
+        serialization_alias="OVRS_EXCG_CD",
+    )
+    currency: CurrencyCode = Field(
+        default=CurrencyCode.USD,
+        description="거래통화코드",
+        serialization_alias="TR_CRCY_CD",
+    )
+    sequential_search_params: str = Field(
+        default="",
+        description="연속조회검색조건200. 최초 조회시 공란, 이전 조회 Output CTX_AREA_FK200 값",
+        serialization_alias="CTX_AREA_FK200",
+    )
+    sequential_search_key: str = Field(
+        default="",
+        description="연속조회키200. 최초 조회시 공란, 이전 조회 Output CTX_AREA_NK200 값",
+        serialization_alias="CTX_AREA_NK200",
+    )
+
+    model_config = ConfigDict(use_enum_values=True, validate_default=True)
+
+
+class KISOverseasOutput1Response(BaseModel):
+    cano: str = Field(description="종합계좌번호")
+    acnt_prdt_cd: str = Field(description="계좌상품코드")
+    prdt_type_cd: str = Field(description="상품유형코드")
+    ovrs_pdno: str = Field(description="해외상품번호")
+    ovrs_item_name: str = Field(description="해외종목명")
+    frcr_evlu_pfls_amt: str = Field(description="외화평가손익금액")
+    evlu_pfls_rt: str = Field(description="평가손익율")
+    pchs_avg_pric: str = Field(description="매입평균가격")
+    ovrs_cblc_qty: str = Field(description="해외잔고수량")
+    ord_psbl_qty: str = Field(description="주문가능수량")
+    frcr_pchs_amt1: str = Field(description="외화매입금액1")
+    ovrs_stck_evlu_amt: str = Field(description="해외주식평가금액")
+    now_pric2: str = Field(description="현재가격2")
+    tr_crcy_cd: str = Field(description="거래통화코드")
+    ovrs_excg_cd: str = Field(description="해외거래소코드")
+    loan_type_cd: str = Field(description="대출유형코드")
+    loan_dt: str = Field(description="대출일자")
+    expd_dt: str = Field(description="만기일자")
+
+
+class KISOverseasOutput2Response(BaseModel):
+    frcr_pchs_amt1: float = Field(description="외화매입금액1")
+    ovrs_rlzt_pfls_amt: float = Field(description="해외실현손익금액")
+    ovrs_tot_pfls: float = Field(description="해외총손익")
+    rlzt_erng_rt: float = Field(description="실현수익율")
+    tot_evlu_pfls_amt: float = Field(description="총평가손익금액")
+    tot_pftrt: float = Field(description="총수익률")
+    frcr_buy_amt_smtl1: float = Field(description="외화매수금액합계1")
+    ovrs_rlzt_pfls_amt2: float = Field(description="해외실현손익금액2")
+    frcr_buy_amt_smtl2: float = Field(description="외화매수금액합계2")
+
+
+class KISOverseasBalanceResponse(KISBaseResponse):
+    output1: list[KISOverseasOutput1Response | None] = Field(description="응답상세1")
+    output2: KISOverseasOutput2Response | None = Field(
+        default=None, description="응답상세2"
+    )
+    ctx_area_fk200: str = Field(default="", description="연속조회검색조건200")
+    ctx_area_nk200: str = Field(default="", description="연속조회키200")
