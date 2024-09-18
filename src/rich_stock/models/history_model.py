@@ -1,10 +1,11 @@
 from pydantic import BaseModel, Field
 
-from ..models.enums import CurrencyCode
+from ..models.enums import CurrencyCode, SellBuyType
 
 
 class DailyHistoryDetailResponse(BaseModel):
     trade_day: str = Field(description="매매 일자")
+    sell_buy_type: SellBuyType = Field(description="매매 구분")
     ticker: str = Field(description="종목코드")
     ticker_name: str = Field(description="종목명")
     trade_quantity: int = Field(description="체결 수량")

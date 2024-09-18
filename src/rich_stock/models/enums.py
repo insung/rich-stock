@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
 
 class CountryCode(str, Enum):
@@ -29,3 +29,9 @@ class OverseasMarketCode(str, Enum):
     # TKSE = "일본"
     # HASE = "베트남 하노이"
     # VNSE = "베트남 호치민"
+
+
+class SellBuyType(IntEnum):
+    ALL = 0
+    SELL = 1
+    BUY = 2
